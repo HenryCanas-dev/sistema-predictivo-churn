@@ -3,9 +3,13 @@
 
 **Proyecto Final** – Bootcamp Python para Ciencia de Datos  
 **Kodigo – Academia de Tecnología Creativa**  
-**Equipo:** [Nombres de los 5 integrantes]  
+**Equipo:** [Henry Mauricio Cañas Contreras
+Dayana Nicolle Guevara Sigüenza
+Carlos Luis Monchez Cerna
+Christopher Enrique Guerrero Lucero
+William Danilo Quijano Roque]  
 **Fecha:** 25 de octubre de 2026  
-**Metodología:** Agile / Scrum (Opción B)
+**Metodología:** Agile / Scrum
 
 ---
 
