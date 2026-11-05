@@ -2,7 +2,7 @@
 
 **Proyecto:** Sistema Predictivo de Abandono de Clientes (Customer Churn)  
 **Bootcamp:** Python para Ciencia de Datos – Kodigo  
-**Equipo:** Henry Mauricio Cañas Contreras, Dayana Nicolle Guevara Sigüenza, Carlos Luis Monchez Cerna, Christopher Enrique Guerrero Lucero y William Danilo Quijano Roque  
+**Equipo:** Henry Mauricio Cañas Contreras, Carlos Luis Monchez Cerna, Christopher Enrique Guerrero Lucero y William Danilo Quijano Roque  
 **Fecha de corte:** 4 de noviembre de 2026  
 **Metodología:** Agile / Scrum (Opción B)
 
