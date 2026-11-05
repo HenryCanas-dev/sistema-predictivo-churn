@@ -6,7 +6,6 @@
 
 **Equipo:**
 - Henry Mauricio Cañas Contreras
-- Dayana Nicolle Guevara Sigüenza
 - Carlos Luis Monchez Cerna
 - Christopher Enrique Guerrero Lucero
 - William Danilo Quijano Roque
@@ -106,7 +105,7 @@ Una User Story se considera **terminada** cuando cumple todos estos criterios:
 | Integrante | Rol principal | User Stories asignadas (sugeridas) |
 |------------|---------------|------------------------------------|
 | Christopher Enrique Guerrero Lucero | Product Owner + Coordinador | US-01, US-12, priorización general |
-| Dayana Nicolle Guevara Sigüenza | Ingeniera de Datos | US-02, US-03, US-04 |
+| Carlos Luis Monchez Cerna | Ingeniero de Datos | US-02, US-03, US-04 |
 | Carlos Luis Monchez Cerna | Científico de Datos (ML) | US-05, US-07 |
 | Henry Mauricio Canas Contreras | Científico de Datos (DL) | US-06 |
 | William Danilo Quijano Roque | Backend + DevOps | US-08, US-09, US-10, US-11 |
