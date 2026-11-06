@@ -1,42 +1,51 @@
-# ESte codigo es parte de US-09 y US-10
-from pathlib import Path
-from typing import ClassVar
 
-from fastapi import FastAPI, HTTPException
+from pathlib import Path
+
 import joblib
 import pandas as pd
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from src.modelos.predictor import PredictorRiesgo
-
 from src.alertas.notificador import ServicioAlertas
 from src.almacenamiento.mongo_db import ConectorMongo
-from src.modelos.predictor import PredictorRiesgo
+
 
 app = FastAPI(
     title="API de Predicción de Churn - Telco",
-    description="Servicio para evaluar el riesgo de abandono de clientes, Alertas Automatizadas "
-    "e historial (US-09, US-10, US-11)",
+    description="Servicio para evaluar el riesgo de abandono de clientes.",
     version="1.2.0",
 )
 
-# Intentar cargar el modelo guardado en models/ (US-05 / US-07)
-RUTA_MODELO = Path("models/modelo_logistico_churn.pkl")
+# Localizar la carpeta principal del proyecto
+RAIZ_PROYECTO = Path(__file__).resolve().parents[2]
+
+# Cargar el modelo MLP entrenado en US-06
+RUTA_MODELO = RAIZ_PROYECTO / "models" / "modelo_mlp_churn.pkl"
+
 modelo = None
 
 if RUTA_MODELO.exists():
     modelo = joblib.load(RUTA_MODELO)
+    print("Modelo MLP cargado correctamente.")
+else:
+    print(f"No se encontró el modelo en: {RUTA_MODELO}")
 
-# Instanciar conector a MongoDB (US-10)
+
+# Conectar con MongoDB
 mongo_db = ConectorMongo()
 mongo_db.conectar()
 
 
 class ClienteEntrada(BaseModel):
-    """Esquema para validar los datos de entrada en formato JSON (US-09)."""
+    """Datos necesarios para realizar una predicción."""
 
-    Tenure_Months: int = Field(..., example=2, description="Meses de permanencia")
-    Monthly_Charges: float = Field(..., example=53.85, description="Cargo mensual")
+    Tenure_Months: int = Field(
+        ..., example=2, description="Meses de permanencia"
+    )
+    Monthly_Charges: float = Field(
+        ..., example=53.85, description="Cargo mensual"
+    )
     Total_Charges: float = Field(
         ..., example=108.15, description="Cargo total histórico"
     )
@@ -51,34 +60,49 @@ def inicio():
 
 @app.post("/predict")
 def predecir_churn(cliente: ClienteEntrada):
-    """Endpoint POST para predecir el riesgo y persistir en MongoDB (US-09 / US-10)."""
-    try:
-        # 1. Inferencia del modelo
-        if modelo is not None:
-            df_input = pd.DataFrame(
-                [
-                    [
-                        cliente.Tenure_Months,
-                        cliente.Monthly_Charges,
-                        cliente.Total_Charges,
-                    ]
-                ],
-                columns=["Tenure Months", "Monthly Charges", "Total Charges"],
-            )
-            probabilidad = float(modelo.predict_proba(df_input)[0][1])
-        else:
-            probabilidad = 0.85
+    """Predice el riesgo de abandono y guarda el resultado."""
 
-        # 2. Regla de negocio y alerta (US-08, US-11)
-        resultado_riesgo = PredictorRiesgo.clasificar_riesgo(probabilidad)
-        datos_cliente_dict = cliente.model_dump()
-
-        # 3. Procesar Alerta Automática si riesgo > 80% (US-11)
-        alerta_emitida = ServicioAlertas.procesar_alerta(
-            datos_cliente_dict, resultado_riesgo
+    # No generar predicciones si el modelo no está disponible
+    if modelo is None:
+        raise HTTPException(
+            status_code=503,
+            detail="El modelo de predicción no está disponible.",
         )
 
-        # 4. Guardar en MongoDB (US-10)
+    try:
+        # Preparar los datos para el modelo
+        df_input = pd.DataFrame(
+            [
+                [
+                    cliente.Tenure_Months,
+                    cliente.Monthly_Charges,
+                    cliente.Total_Charges,
+                ]
+            ],
+            columns=[
+                "Tenure Months",
+                "Monthly Charges",
+                "Total Charges",
+            ],
+        )
+
+        # Calcular la probabilidad de abandono
+        probabilidad = float(modelo.predict_proba(df_input)[0][1])
+
+        # Clasificar el riesgo
+        resultado_riesgo = PredictorRiesgo.clasificar_riesgo(
+            probabilidad
+        )
+
+        datos_cliente_dict = cliente.model_dump()
+
+        # Procesar alerta automática
+        alerta_emitida = ServicioAlertas.procesar_alerta(
+            datos_cliente_dict,
+            resultado_riesgo,
+        )
+
+        # Guardar predicción en MongoDB
         registro_id = mongo_db.guardar_prediccion(
             datos_cliente=datos_cliente_dict,
             resultado_prediccion=resultado_riesgo,
@@ -91,5 +115,8 @@ def predecir_churn(cliente: ClienteEntrada):
             "registro_mongo_id": registro_id,
         }
 
-    except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al procesar la predicción: {str(e)}",
+        )
